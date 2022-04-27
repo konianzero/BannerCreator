@@ -99,10 +99,10 @@ fun main() {
     val roman = AsciiFont("roman.txt")
     val medium = AsciiFont("medium.txt")
 
-    print("Enter name and surname: ")
+    print("Enter project name: ")
     val name = readln()
 
-    print("Enter person's status: ")
+    print("Enter short description: ")
     val status = readln()
 
     val bannerCreator = BannerCreator(name, status, roman, medium)
