@@ -1,11 +1,12 @@
 import java.io.File
 import java.net.URI
+// TODO - Add kotlinx-cli
 
 class BannerCreator(private val name: String,
                     private val status: String,
                     private val nameFont: AsciiFont,
                     private val statusFont: AsciiFont = nameFont,
-                    private val border: String = "8") {
+                    private val borderChar: String = "8") {
 
     fun create() {
         val name: List<String> = convertStringToFont(name, nameFont)
@@ -30,26 +31,26 @@ class BannerCreator(private val name: String,
         }
         statusLength = statusLines[0].length
 
-        val borderGap = (border.length + 1 + 2) * 2
-        val borderLength = (nameLength + borderGap)
+        val borderLength = nameLength + (borderChar.length + 3) * 2
+        val border = borderChar.repeat(borderLength)
 
-        println(border.repeat(borderLength))
+        println(border)
         nameLines.forEach {
-            println("$border$border  $it  $border$border")
+            println("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
         statusLines.forEach {
-            println("$border$border  $it  $border$border")
+            println("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
-        println(border.repeat(borderLength))
+        println(border)
     }
 
     private fun convertStringToFont(string: String, font: AsciiFont): List<String> {
         return List(font.size) {
-            val str = StringBuilder()
-            for (char in string.toCharArray()) {
-                str.append(font.dictionary[char]?.get(it).toString())
+            val fontBuilder = StringBuilder()
+            string.toCharArray().forEach { char ->
+                fontBuilder.append(font.dictionary[char]?.get(it).toString())
             }
-            str.toString()
+            fontBuilder.toString()
         }
     }
 }
@@ -57,7 +58,6 @@ class BannerCreator(private val name: String,
 class AsciiFont(fontPath: String) {
     val dictionary = hashMapOf<Char, List<String>?>()
     val size: Int
-    private val numberOfChars: Int
 
     init {
         var lineNum = 0
@@ -68,7 +68,6 @@ class AsciiFont(fontPath: String) {
         val font = resourceAsURI(fontPath).let { File(it).bufferedReader() }
         val fontMetaData = font.readLine().split(" ").map { it.toInt() }
         size = fontMetaData[0]
-        numberOfChars = fontMetaData[1]
 
         while (true) {
             val string = font.readLine() ?: break
@@ -89,12 +88,13 @@ class AsciiFont(fontPath: String) {
             lineNum += size + 1
         }
 
-        dictionary[' '] = MutableList(size) { " ".repeat(space) }
+        dictionary[' '] = List(size) { " ".repeat(space) }
     }
 
-    private fun resourceAsURI(path: String): URI? = object {}.javaClass.getResource(path)?.toURI()
+    private fun resourceAsURI(path: String): URI = object {}.javaClass.getResource(path)!!.toURI()
 }
 
+// TODO - Write banner to file
 fun main() {
     val roman = AsciiFont("roman.txt")
     val medium = AsciiFont("medium.txt")
