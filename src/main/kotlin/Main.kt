@@ -6,7 +6,11 @@ class BannerCreator(private val name: String,
                     private val status: String,
                     private val nameFont: AsciiFont,
                     private val statusFont: AsciiFont = nameFont,
-                    private val borderChar: String = "8") {
+                    private val borderChar: String = "8",
+                    private val printToConsole: Boolean = false,
+                    private val outputFileName: String = "banner.txt") {
+
+    private val banner = mutableListOf<String>()
 
     fun create() {
         val name: List<String> = convertStringToFont(name, nameFont)
@@ -34,14 +38,19 @@ class BannerCreator(private val name: String,
         val borderLength = nameLength + (borderChar.length + 3) * 2
         val border = borderChar.repeat(borderLength)
 
-        println(border)
+        banner.add(border)
         nameLines.forEach {
-            println("$borderChar$borderChar  $it  $borderChar$borderChar")
+            banner.add("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
         statusLines.forEach {
-            println("$borderChar$borderChar  $it  $borderChar$borderChar")
+            banner.add("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
-        println(border)
+        banner.add(border)
+
+        if (printToConsole) {
+            printToConsole()
+        }
+        writeToFile()
     }
 
     private fun convertStringToFont(string: String, font: AsciiFont): List<String> {
@@ -52,6 +61,18 @@ class BannerCreator(private val name: String,
             }
             fontBuilder.toString()
         }
+    }
+
+    private fun writeToFile() {
+        val fileWriter = File(outputFileName).bufferedWriter()
+        fileWriter.appendLine()
+        banner.forEach { fileWriter.appendLine(it) }
+        fileWriter.flush()
+        fileWriter.close()
+    }
+
+    private fun printToConsole() {
+        banner.forEach { println(it) }
     }
 }
 
@@ -94,7 +115,6 @@ class AsciiFont(fontPath: String) {
     private fun resourceAsURI(path: String): URI = object {}.javaClass.getResource(path)!!.toURI()
 }
 
-// TODO - Write banner to file
 fun main() {
     val roman = AsciiFont("roman.txt")
     val medium = AsciiFont("medium.txt")
