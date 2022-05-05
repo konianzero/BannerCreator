@@ -13,27 +13,26 @@ class BannerCreator(private val name: String,
     private val banner = mutableListOf<String>()
 
     fun create() {
-        val name: List<String> = convertStringToFont(name, nameFont)
-        val status: List<String> = convertStringToFont(status, statusFont)
+        var nameLines: List<String> = convertStringToFont(name, nameFont)
+        var statusLines: List<String> = convertStringToFont(status, statusFont)
 
-        var nameLength: Int = name[0].length
-        var statusLength: Int = status[0].length
+        var nameLength: Int = nameLines[0].length
+        val statusLength: Int = statusLines[0].length
 
-        val nameLines: List<String> = if (nameLength < statusLength) {
+        nameLines = if (nameLength < statusLength) {
             val leftOffset = (statusLength - nameLength) / 2
             val rightOffset = if ((statusLength - nameLength) % 2 == 0) leftOffset else leftOffset + 1
-            List(name.size) { "${" ".repeat(leftOffset)}${name[it]}${" ".repeat(rightOffset)}" }
+            List(nameLines.size) { "${" ".repeat(leftOffset)}${nameLines[it]}${" ".repeat(rightOffset)}" }
         } else {
-            name
+            nameLines
         }
         nameLength = nameLines[0].length
 
-        val statusLines: List<String> = List(status.size) {
+        statusLines = List(statusLines.size) {
             val leftOffset = (nameLength - statusLength) / 2
             val rightOffset = nameLength - (statusLength + leftOffset)
-            " ".repeat(leftOffset) + status[it] + " ".repeat(rightOffset)
+            " ".repeat(leftOffset) + statusLines[it] + " ".repeat(rightOffset)
         }
-        statusLength = statusLines[0].length
 
         val borderLength = nameLength + (borderChar.length + 3) * 2
         val border = borderChar.repeat(borderLength)
@@ -54,21 +53,20 @@ class BannerCreator(private val name: String,
     }
 
     private fun convertStringToFont(string: String, font: AsciiFont): List<String> {
-        return List(font.size) {
+        return List(font.size) { listElement ->
             val fontBuilder = StringBuilder()
             string.toCharArray().forEach { char ->
-                fontBuilder.append(font.dictionary[char]?.get(it).toString())
+                fontBuilder.append(font.dictionary[char]!![listElement])
             }
             fontBuilder.toString()
         }
     }
 
     private fun writeToFile() {
-        val fileWriter = File(outputFileName).bufferedWriter()
-        fileWriter.appendLine()
-        banner.forEach { fileWriter.appendLine(it) }
-        fileWriter.flush()
-        fileWriter.close()
+        File(outputFileName).bufferedWriter().use { writer ->
+            writer.appendLine()
+            banner.forEach { writer.appendLine(it) }
+        }
     }
 
     private fun printToConsole() {
@@ -77,36 +75,38 @@ class BannerCreator(private val name: String,
 }
 
 class AsciiFont(fontPath: String) {
-    val dictionary = hashMapOf<Char, List<String>?>()
+    val dictionary = hashMapOf<Char, List<String>>()
     val size: Int
 
     init {
+        val charSequence = mutableListOf<String>()
         var lineNum = 0
         var space = 10
         var char = ' '
-        val charSequence = mutableListOf<String>()
 
-        val font = resourceAsURI(fontPath).let { File(it).bufferedReader() }
-        val fontMetaData = font.readLine().split(" ").map { it.toInt() }
-        size = fontMetaData[0]
+        resourceAsURI(fontPath).let { File(it).bufferedReader() }.use { fontFile ->
+            val fontMetaData = fontFile.readLine().split(" ").map { it.toInt() }
+            size = fontMetaData[0]
 
-        while (true) {
-            val string = font.readLine() ?: break
+            while (true) {
+                val line = fontFile.readLine() ?: break
 
-            if (lineNum % (size + 1) == 0) {
-                char = string.split(" ")[0].first()
-                if ('a' == char) {
-                    space = string.split(" ")[1].toInt()
+                if (lineNum % (size + 1) == 0) {
+                    val charMetaData = line.split(" ")
+                    char = charMetaData[0].first()
+                    if ('a' == char) {
+                        space = charMetaData[1].toInt()
+                    }
                 }
-            }
 
-            repeat(size) {
-                charSequence.add(font.readLine())
-            }
-            dictionary[char] = charSequence.toList()
-            charSequence.clear()
+                repeat(size) {
+                    charSequence.add(fontFile.readLine())
+                }
+                dictionary[char] = charSequence.toList()
+                charSequence.clear()
 
-            lineNum += size + 1
+                lineNum += size + 1
+            }
         }
 
         dictionary[' '] = List(size) { " ".repeat(space) }
@@ -125,6 +125,6 @@ fun main() {
     print("Enter short description: ")
     val status = readln()
 
-    val bannerCreator = BannerCreator(name, status, roman, medium)
+    val bannerCreator = BannerCreator(name, status, roman, medium, printToConsole = true)
     bannerCreator.create()
 }
