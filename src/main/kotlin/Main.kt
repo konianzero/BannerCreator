@@ -3,9 +3,9 @@ import java.net.URI
 // TODO - Add kotlinx-cli
 
 class BannerCreator(private val name: String,
-                    private val status: String,
+                    private val description: String,
                     private val nameFont: AsciiFont,
-                    private val statusFont: AsciiFont = nameFont,
+                    private val descriptionFont: AsciiFont = nameFont,
                     private val borderChar: String = "8",
                     private val printToConsole: Boolean = false,
                     private val outputFileName: String = "banner.txt") {
@@ -14,24 +14,24 @@ class BannerCreator(private val name: String,
 
     fun create() {
         var nameLines: List<String> = convertStringToFont(name, nameFont)
-        var statusLines: List<String> = convertStringToFont(status, statusFont)
+        var descriptionLines: List<String> = convertStringToFont(description, descriptionFont)
 
         var nameLength: Int = nameLines[0].length
-        val statusLength: Int = statusLines[0].length
+        val descriptionLength: Int = descriptionLines[0].length
 
-        nameLines = if (nameLength < statusLength) {
-            val leftOffset = (statusLength - nameLength) / 2
-            val rightOffset = if ((statusLength - nameLength) % 2 == 0) leftOffset else leftOffset + 1
+        nameLines = if (nameLength < descriptionLength) {
+            val leftOffset = (descriptionLength - nameLength) / 2
+            val rightOffset = if ((descriptionLength - nameLength) % 2 == 0) leftOffset else leftOffset + 1
             List(nameLines.size) { "${" ".repeat(leftOffset)}${nameLines[it]}${" ".repeat(rightOffset)}" }
         } else {
             nameLines
         }
         nameLength = nameLines[0].length
 
-        statusLines = List(statusLines.size) {
-            val leftOffset = (nameLength - statusLength) / 2
-            val rightOffset = nameLength - (statusLength + leftOffset)
-            " ".repeat(leftOffset) + statusLines[it] + " ".repeat(rightOffset)
+        descriptionLines = List(descriptionLines.size) {
+            val leftOffset = (nameLength - descriptionLength) / 2
+            val rightOffset = nameLength - (descriptionLength + leftOffset)
+            " ".repeat(leftOffset) + descriptionLines[it] + " ".repeat(rightOffset)
         }
 
         val borderLength = nameLength + (borderChar.length + 3) * 2
@@ -41,7 +41,7 @@ class BannerCreator(private val name: String,
         nameLines.forEach {
             banner.add("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
-        statusLines.forEach {
+        descriptionLines.forEach {
             banner.add("$borderChar$borderChar  $it  $borderChar$borderChar")
         }
         banner.add(border)
@@ -49,20 +49,19 @@ class BannerCreator(private val name: String,
         if (printToConsole) {
             printToConsole()
         }
-        writeToFile()
     }
 
     private fun convertStringToFont(string: String, font: AsciiFont): List<String> {
-        return List(font.size) { listElement ->
+        return List(font.size) { listElementNum ->
             val fontBuilder = StringBuilder()
             string.toCharArray().forEach { char ->
-                fontBuilder.append(font.dictionary[char]!![listElement])
+                fontBuilder.append(font.dictionary[char]!![listElementNum])
             }
             fontBuilder.toString()
         }
     }
 
-    private fun writeToFile() {
+    fun writeToFile() {
         File(outputFileName).bufferedWriter().use { writer ->
             writer.appendLine()
             banner.forEach { writer.appendLine(it) }
@@ -123,8 +122,9 @@ fun main() {
     val name = readln()
 
     print("Enter short description: ")
-    val status = readln()
+    val description = readln()
 
-    val bannerCreator = BannerCreator(name, status, roman, medium, printToConsole = true)
+    val bannerCreator = BannerCreator(name, description, roman, medium, printToConsole = true)
     bannerCreator.create()
+    bannerCreator.writeToFile()
 }
