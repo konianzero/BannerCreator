@@ -1,6 +1,11 @@
+package me.banner.creator
+
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
+
 import java.io.File
-import java.net.URI
-// TODO - Add kotlinx-cli
+import java.io.InputStream
 
 class BannerCreator(private val name: String,
                     private val description: String,
@@ -83,7 +88,7 @@ class AsciiFont(fontPath: String) {
         var space = 10
         var char = ' '
 
-        resourceAsURI(fontPath).let { File(it).bufferedReader() }.use { fontFile ->
+        resourceAsFile(fontPath).bufferedReader().use { fontFile ->
             val fontMetaData = fontFile.readLine().split(" ").map { it.toInt() }
             size = fontMetaData[0]
 
@@ -111,12 +116,16 @@ class AsciiFont(fontPath: String) {
         dictionary[' '] = List(size) { " ".repeat(space) }
     }
 
-    private fun resourceAsURI(path: String): URI = object {}.javaClass.getResource(path)!!.toURI()
+    private fun resourceAsFile(path: String): InputStream = object {}.javaClass.classLoader.getResourceAsStream(path)!!
 }
 
-fun main() {
-    val roman = AsciiFont("roman.txt")
-    val medium = AsciiFont("medium.txt")
+fun main(args: Array<String>) {
+    val parser = ArgParser("Banner Creator")
+    val doPrint by parser.option(ArgType.Boolean, shortName = "p", description = "print banner to console").default(false)
+    parser.parse(args)
+
+    val roman = AsciiFont("font/roman.txt")
+    val medium = AsciiFont("font/medium.txt")
 
     print("Enter project name: ")
     val name = readln()
@@ -124,7 +133,7 @@ fun main() {
     print("Enter short description: ")
     val description = readln()
 
-    val bannerCreator = BannerCreator(name, description, roman, medium, printToConsole = true)
+    val bannerCreator = BannerCreator(name, description, roman, medium, printToConsole = doPrint)
     bannerCreator.create()
     bannerCreator.writeToFile()
 }

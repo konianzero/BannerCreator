@@ -3,11 +3,35 @@ Banner Creator
 
 _**Kotlin**_
 
+Create banners from ascii font.
+
+---
+
+### Run
+
+Build
+```bash
+./gradlew clean build
+```
+Run
+```bash
+java -jar build/libs/BannerCreator-2.0-SNAPSHOT.jar
+```
+
 ---
 
 ### Example
 
+```bash
+> java -jar build/libs/BannerCreator-2.0-SNAPSHOT.jar -h
+Usage: Banner Creator options_list
+Options: 
+    --print, -p [false] -> print banner to console 
+    --help, -h -> Usage info 
 ```
+
+```
+> java -jar build/libs/BannerCreator-1.0-SNAPSHOT.jar -p
 Enter project name: Name
 Enter short description: description
 8888888888888888888888888888888888888888888888888888888888888
