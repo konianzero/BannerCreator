@@ -3,17 +3,18 @@ package me.banner.creator
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-
+import kotlinx.cli.required
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Path
 
 class BannerCreator(private val name: String,
                     private val description: String,
                     private val nameFont: AsciiFont,
-                    private val descriptionFont: AsciiFont = nameFont,
-                    private val borderChar: String = "8",
-                    private val printToConsole: Boolean = false,
-                    private val outputFileName: String = "banner.txt") {
+                    private val descriptionFont: AsciiFont,
+                    private val borderChar: String,
+                    private val printToConsole: Boolean,
+                    private val outputFileName: String) {
 
     private val banner = mutableListOf<String>()
 
@@ -88,7 +89,7 @@ class AsciiFont(fontPath: String) {
         var space = 10
         var char = ' '
 
-        resourceAsFile(fontPath).bufferedReader().use { fontFile ->
+        asInputStream(fontPath).bufferedReader().use { fontFile ->
             val fontMetaData = fontFile.readLine().split(" ").map { it.toInt() }
             size = fontMetaData[0]
 
@@ -116,24 +117,40 @@ class AsciiFont(fontPath: String) {
         dictionary[' '] = List(size) { " ".repeat(space) }
     }
 
-    private fun resourceAsFile(path: String): InputStream = object {}.javaClass.classLoader.getResourceAsStream(path)!!
+    private fun asInputStream(path: String): InputStream {
+        if (Path.of(path).isAbsolute) {
+            return File(path).inputStream()
+        }
+        return object {}.javaClass.classLoader.getResourceAsStream(path)!!
+    }
 }
 
 fun main(args: Array<String>) {
     val parser = ArgParser("Banner Creator")
-    val doPrint by parser.option(ArgType.Boolean, shortName = "p", description = "print banner to console").default(false)
+
+    val name by parser.option(ArgType.String, shortName = "n", description = "Project name").required()
+    val description by parser.option(ArgType.String, shortName = "d", description = "Project short description").required()
+    val singleFont by parser.option(ArgType.Boolean, shortName = "sf", description = "Use one font for name and description (name font for default)").default(false)
+    val nameFontPath by parser.option(ArgType.String, shortName = "nf", description = "Path to font file for Name") .default("font/roman.txt")
+    val descFontPath by parser.option(ArgType.String, shortName = "df", description = "Path to font file for Description") .default("font/medium.txt")
+    val print by parser.option(ArgType.Boolean, shortName = "p", description = "Print banner to console").default(false)
+    val border by parser.option(ArgType.String, shortName = "b", description = "Border symbol").default("8")
+    val output by parser.option(ArgType.String, shortName = "o", description = "Output file").default("banner.txt")
+
     parser.parse(args)
 
-    val roman = AsciiFont("font/roman.txt")
-    val medium = AsciiFont("font/medium.txt")
+    val nameFont: AsciiFont
+    val descriptionFont: AsciiFont
 
-    print("Enter project name: ")
-    val name = readln()
+    if (singleFont) {
+        nameFont = AsciiFont(nameFontPath)
+        descriptionFont = nameFont
+    } else {
+        nameFont = AsciiFont(nameFontPath)
+        descriptionFont = AsciiFont(descFontPath)
+    }
 
-    print("Enter short description: ")
-    val description = readln()
-
-    val bannerCreator = BannerCreator(name, description, roman, medium, printToConsole = doPrint)
+    val bannerCreator = BannerCreator(name, description, nameFont, descriptionFont, printToConsole = print, borderChar = border, outputFileName = output)
     bannerCreator.create()
     bannerCreator.writeToFile()
 }
