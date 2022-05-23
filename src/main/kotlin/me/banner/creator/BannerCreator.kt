@@ -59,7 +59,13 @@ internal class BannerCreator(private val name: String,
         return List(font.size) { elementNum ->
             val fontBuilder = StringBuilder()
             string.toCharArray().forEach { char ->
-                fontBuilder.append(font.dictionary[char]!![elementNum])
+                var fontChar = ""
+                runCatching {
+                    fontChar = font.dictionary[char]!![elementNum]
+                }.onFailure {
+                    fontChar = font.dictionary['N']!![elementNum]
+                }
+                fontBuilder.append(fontChar)
             }
             fontBuilder.toString()
         }
