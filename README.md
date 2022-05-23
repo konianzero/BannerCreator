@@ -13,7 +13,7 @@ Build
 ```bash
 ./gradlew clean build
 ```
-Run
+Run (see examples)
 ```bash
 java -jar build/libs/BannerCreator-2.0-SNAPSHOT.jar <options>
 ```
