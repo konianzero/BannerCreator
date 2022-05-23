@@ -83,7 +83,7 @@ Options:
 
 ```
 
-If no matching is found, then replaces the character with 'N'
+If no matching is found, then replaces the character with 'N' (default font)
 ```
 java -jar build/libs/BannerCreator-2.1-SNAPSHOT.jar -p -n "Project 17" -d "description & etc."
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
